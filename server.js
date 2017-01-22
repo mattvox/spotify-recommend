@@ -39,13 +39,33 @@ app.get('/search/:name', function(req, res) {
         getRelated.on('end', function(item) {
             artist.related = item.artists;
             
-            res.json(artist);
+            var counter = 0;
+            
+            artist.related.forEach(function(relArtist) {
+                
+                var getTracks = getFromAPI('artists/' + relArtist.id + 
+                '/top-tracks?country=US', {});
+            
+                getTracks.on('end', function(item) {
+
+                    relArtist.tracks = item.tracks;
+                    
+                    counter++;
+                    
+                    if (counter == artist.related.length) {
+                        res.json(artist);
+                    }  
+                })
+            
+                getTracks.on('error', function(code) {
+                    res.sendStatus(code);
+                })
+            })            
         })
         
         getRelated.on('error', function(code) {
             res.sendStatus(code);
         })
-        //res.json(artist);
     });
     
     searchReq.on('error', function(code) {
@@ -53,9 +73,6 @@ app.get('/search/:name', function(req, res) {
     });
 });
 
-// search for related artists
-
-//first must obtain artist ID, then use artist ID to search for related artists
 
 
 
